@@ -19,15 +19,19 @@ import {
   orderBy,
   onSnapshot,
   where,
+  Timestamp,
 } from 'firebase/firestore';
 
 import * as firebaseui from 'firebaseui';
 
 // Document elements
 const startRsvpButton = document.getElementById('login');
-const supmitButton = document.getElementById('toevoegen');
+const submitButton = document.getElementById('toevoegen');
 const addTask = document.getElementById('addTasks');
 const newTask = document.getElementById('newTask');
+const table = document.getElementById('tabel');
+
+var rol;
 
 let rsvpListener = null;
 let guestbookListener = null;
@@ -84,7 +88,6 @@ async function main() {
 
       // laat de dingen zien die zichtbaar zijn als je bent ingelogd
       document.getElementById('Teamleider').style.display = 'block';
-      newTask.style.display = 'block';
     } else {
       startRsvpButton.textContent = 'Login';
       document.getElementById('Teamleider').style.display = 'none';
@@ -94,6 +97,11 @@ async function main() {
       for (var i = 0; i < item.length; i++) {
         if (item[i].userId == auth.currentUser.uid) {
           console.log('gebruiker bestaat');
+
+          if (item.positie == 'Teamleider') {
+            rol = 'Teamleider';
+            newTask.style.display = 'block';
+          }
           return;
         } else {
           console.log('nieuwe gebruiker');
@@ -106,13 +114,16 @@ async function main() {
       }
     });
   });
-  supmitButton.addEventListener('click', () => {
+  submitButton.addEventListener('click', () => {
     addDoc(collection(db, 'tasks'), {
       taak: document.getElementById('taak').value,
       timestamp: Date.now(),
+      meeBezig: '',
+      Klaar: 'false',
     });
     document.getElementById('taak').value = '';
     addTask.style.display = 'none';
+    load_table(db);
   });
 
   newTask.addEventListener('click', () => {
@@ -129,4 +140,45 @@ async function get_users(db) {
   });
   return gebruikers;
 }
+
+function add_row(taak_data) {
+  var row = document.createElement('tr');
+
+  for (var i = 0; i < taak_data.length; i++) {
+    var collum = document.createElement('td');
+
+    collum.innerHTML = taak_data[i];
+    row.appendChild(collum);
+  }
+
+  table.appendChild(row);
+}
+
+async function load_table(db) {
+  var taken = [];
+
+  while (table.hasChildNodes()) {
+    table.removeChild(table.lastChild);
+  }
+
+  const tasks = await getDocs(collection(db, 'tasks'));
+  tasks.forEach((task) => {
+    taken.push(task.data());
+  });
+
+  for (var i = 0; i < taken.length; i++) {
+    var taak = taken[i];
+    if (taak.meeBezig == '') {
+      add_row([taak.taak, taak.timestamp, 'moet nog gebeuren']);
+    } else {
+      if (taak.Klaar == true) {
+        add_row([taak.taak, taak.timestamp, 'klaar']);
+      } else {
+        add_row([taak.taak, taak.timestamp, taak.meeBezig]);
+      }
+    }
+  }
+}
+
 main();
+load_table(db);

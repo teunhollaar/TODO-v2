@@ -20,6 +20,9 @@ import {
   onSnapshot,
   where,
   Timestamp,
+  updateDoc,
+  doc,
+  toDate,
 } from 'firebase/firestore';
 
 import * as firebaseui from 'firebaseui';
@@ -31,11 +34,7 @@ const addTask = document.getElementById('addTasks');
 const newTask = document.getElementById('newTask');
 const table = document.getElementById('tabel');
 
-var rol;
 var taak_knoppen = [];
-
-let rsvpListener = null;
-let guestbookListener = null;
 
 let db, auth;
 
@@ -120,7 +119,7 @@ async function main() {
       taak: document.getElementById('taak').value,
       timestamp: Date.now(),
       meeBezig: '',
-      Klaar: 'false',
+      Klaar: false,
     });
     document.getElementById('taak').value = '';
     addTask.style.display = 'none';
@@ -149,6 +148,7 @@ function add_row(taak_data) {
     var collum = document.createElement('td');
 
     collum.innerHTML = taak_data[i];
+    //hier zou ik moeten contorleren of de collum waar we nu aan het toevoegen zijn een datum is en deze leesbaar maken hier heb ik jammer genoeg de tijd niet meer voor
     row.appendChild(collum);
   }
   var buttoncell = document.createElement('td');
@@ -167,6 +167,7 @@ function add_row(taak_data) {
 
 async function load_table(db) {
   var taken = [];
+  var takenId = [];
 
   while (table.hasChildNodes()) {
     table.removeChild(table.lastChild);
@@ -177,11 +178,13 @@ async function load_table(db) {
     orderBy('timestamp', 'desc')
   );
   tasks.forEach((task) => {
+    takenId.push(task);
     taken.push(task.data());
   });
 
   for (var i = 0; i < taken.length; i++) {
     var taak = taken[i];
+
     if (taak.meeBezig == '') {
       add_row([taak.taak, taak.timestamp, 'moet nog gebeuren']);
     } else {
@@ -189,13 +192,27 @@ async function load_table(db) {
         add_row([taak.taak, taak.timestamp, 'klaar']);
       } else {
         add_row([taak.taak, taak.timestamp, taak.meeBezig]);
+        document.getElementById(taak.timestamp).innerHTML = 'beeindiggen';
       }
     }
-  }
-  for (var i = 0; i < taak_knoppen.length; i++) {
-    var id = taak_knoppen[i].id;
     taak_knoppen[i].addEventListener('click', () => {
-      console.log(id);
+      console.log(event.srcElement.id);
+      for (var n = 0; n < taken.length; n++) {
+        if (taken[n].timestamp == event.srcElement.id) {
+          const docRef = doc(db, 'tasks', takenId[n].id);
+          if (taak.meeBezig == '') {
+            updateDoc(docRef, {
+              meeBezig: auth.currentUser.displayName,
+            });
+          } else {
+            updateDoc(docRef, {
+              Klaar: true,
+            });
+          }
+
+          load_table(db);
+        }
+      }
     });
   }
 }

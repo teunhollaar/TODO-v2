@@ -62,7 +62,7 @@ div#addTasks {
   border: 2px solid rgb(60, 67, 154);
   border-radius: 25px;
   background-color: #fff;
-  background-color: rgba(31, 129, 153, 0.5);
+  background-color: rgba(31, 129, 153, 0.9);
 }
 
 #toevoegen {

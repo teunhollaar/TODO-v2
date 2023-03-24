@@ -53,8 +53,23 @@ div#main {
 }
 
 div#addTasks {
-  width: 800px;
   height: 400px;
-  left: 50%;
-  background-color: rgb(38, 188, 214);
+  z-index: 1;
+  top: 10%;
+  margin: auto;
+  width: 50%;
+  position: absolute;
+  border: 2px solid rgb(60, 67, 154);
+  border-radius: 25px;
+  background-color: #fff;
+  background-color: rgba(31, 129, 153, 0.5);
+}
+
+#toevoegen {
+  top: 15%;
+}
+
+#taak {
+  position: relative;
+  top: 10%;
 }

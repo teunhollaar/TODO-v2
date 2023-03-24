@@ -32,6 +32,7 @@ const newTask = document.getElementById('newTask');
 const table = document.getElementById('tabel');
 
 var rol;
+var taak_knoppen = [];
 
 let rsvpListener = null;
 let guestbookListener = null;
@@ -98,9 +99,9 @@ async function main() {
         if (item[i].userId == auth.currentUser.uid) {
           console.log('gebruiker bestaat');
 
-          if (item.positie == 'Teamleider') {
-            rol = 'Teamleider';
-            newTask.style.display = 'block';
+          if (item[i].positie == 'Teamleider') {
+            console.log('gebruiker is teamleider');
+            newTask.style.display = 'inline-block';
           }
           return;
         } else {
@@ -150,7 +151,17 @@ function add_row(taak_data) {
     collum.innerHTML = taak_data[i];
     row.appendChild(collum);
   }
+  var buttoncell = document.createElement('td');
+  var button = document.createElement('button');
+  //elke taak heeft ook een id nodig om de knoppen te linken we gebruiken hiervoor de timestamp omdat deze per miliseconde gaat is het realistisch onmogelijk 2 de zelfde timestamps te maken
+  button.id = taak_data[1];
+  button.innerHTML = 'Begin';
 
+  taak_knoppen.push(button);
+
+  buttoncell.appendChild(button);
+
+  row.appendChild(buttoncell);
   table.appendChild(row);
 }
 
@@ -161,7 +172,10 @@ async function load_table(db) {
     table.removeChild(table.lastChild);
   }
 
-  const tasks = await getDocs(collection(db, 'tasks'));
+  const tasks = await getDocs(
+    collection(db, 'tasks'),
+    orderBy('timestamp', 'desc')
+  );
   tasks.forEach((task) => {
     taken.push(task.data());
   });
@@ -177,6 +191,12 @@ async function load_table(db) {
         add_row([taak.taak, taak.timestamp, taak.meeBezig]);
       }
     }
+  }
+  for (var i = 0; i < taak_knoppen.length; i++) {
+    var id = taak_knoppen[i].id;
+    taak_knoppen[i].addEventListener('click', () => {
+      console.log(id);
+    });
   }
 }
 
